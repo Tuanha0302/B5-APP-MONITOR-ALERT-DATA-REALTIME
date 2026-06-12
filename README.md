@@ -1,6 +1,50 @@
 # B5-APP-MONITOR-ALERT-DATA-REALTIME
-# 
-# Lý thuyết
+- Môn học: Phát triển ứng dụng với mã nguồn mở - TEE0421
+- Họ và tên: Ngụy Đình Tuấn Hà
+- MSSV: K225480106011
+# YÊU CẦU BÀI TẬP
+# LÝ THUYẾT
+```
++ docker là gì? 
++ các keyword được sử dụng trong docker-compose.yml
+  để mô tả 1 service, network, volume,...
+  liệt kê + ý nghĩa của từ khoá đó + ví dụ minh hoạ
++ ưu điểm khi triển app sử dụng docker là gì?
++ dùng docker: tạo app, test app OK trên laptop cá nhân
+  giờ muốn triển khai app này trên máy chủ thật ko có internet
+  thì các bước cần làm là?
+```
+# THỰC HÀNH ÁP DỤNG
+```
+sử dụng docker compose có nhiều serivce 
+và các thành phần cần thiết để tạo thành ứng dụng:
+ + nodered liên tục lấy dữ liệu từ nguồn nào đó (chứng khoán, thời tiết, giá vàng,...)
+   nguồn thực tế, số liệu luôn động sau thời gian ngắn
+ + nodered lưu trữ dữ liệu vào 2 database: mariadb để lưu giá trị tức thời
+   lưu lịch sử vào influxdb
+ + sử dụng grafana để trực quan hoá dữ liệu: vẽ biểu đồ
+ + sử dụng nginx để làm webserver
+   chạy 1 trang web html+js+css làm front-end
+   js: lấy dữ liệu tức thời trong mariadb qua (ajax | socket) 
+       gọi api (api tự build bằng Flask giống bt1)
+       api trả về giá trị tức thời trong mariadb
+       hiển thị lên web, auto hiển thị số mới khi thay đổi
+   sử dụng iframe để gọi grafana
+   hiển thị biểu đồ dữ liệu lịch sử của thông số đã lưu
+ + QUAN SÁT DỮ LIỆU LỊCH SỬ => GIÁ TRỊ BẤT THƯỜNG
+   (VD MIỀN A..B: OK, DƯỚI A: ALERT LOW, TRÊN B: ALERT HIGH)
+ + nodered: kết hợp bot Telegram
+   khi dữ liệu not OK, thì gửi tin nhắn từ bot => group trên telegram
+   group đã add bot vào: (nhóm đã có 2 người), add thêm 1875746636 thành 3 người
+   mỗi khi bot gửi dữ liệu vào nhóm: mọi member of group đều nhận đc
+   nội dung alert: tường minh, có value gây alert
+
+ xuất tất cả các container ra file nén.
+ xoá mọi container đang chạy
+ load lại các container  từ file nén để khôi phục các container đã xoá
+```
+# BÀI LÀM
+# Phần 1: Lý thuyết
 ## 1. Docker
 Docker là một nền tảng mã nguồn mở cho phép bạn đóng gói ứng dụng và tất cả các thành phần phụ thuộc của nó (libraries, môi trường runtime, cấu hình hệ thống...) vào trong một đơn vị duy nhất gọi là Container.
 
@@ -210,7 +254,7 @@ Bạn cần chuẩn bị sẵn các Docker Image và bộ cài đặt Docker.
 
 
 
-# Thực hành 
+# Phần 2: Thực hành 
 ## 1. Tổng quan hệ thống
 ### 1.1. Giới thiệu
 Dự án xây dựng một hệ thống giám sát và cảnh báo tự động theo thời gian thực (App Monitor + Alert Data Realtime) chạy trên nền tảng Docker Container. Đối tượng giám sát thực tế được lựa chọn ở đây là dữ liệu thời tiết thu thập trực tiếp thông qua API.
@@ -446,49 +490,41 @@ server {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Realtime Weather Monitor | Hệ thống giám sát thời tiết</title>
+    <title>Realtime Weather Monitor</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Font Awesome 6 cho icon đẹp mắt -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="wrapper">
         <h2>HỆ THỐNG GIÁM SÁT THỜI TIẾT REALTIME</h2>
         <div class="monitor-grid">
             <div class="card temp-card">
-                <h3><i class="fas fa-thermometer-half"></i> Nhiệt độ</h3>
+                <h3>Nhiệt độ</h3>
                 <div class="value"><span id="temp">--</span>°C</div>
             </div>
             <div class="card humidity-card">
-                <h3><i class="fas fa-tint"></i> Độ ẩm</h3>
+                <h3>Độ ẩm</h3>
                 <div class="value"><span id="humidity">--</span>%</div>
             </div>
             <div class="card wind-card">
-                <h3><i class="fas fa-wind"></i> Tốc độ gió</h3>
+                <h3>Tốc độ gió</h3>
                 <div class="value"><span id="wind">--</span> km/h</div>
             </div>
         </div>
-        <p class="timestamp">
-            <i class="far fa-clock"></i> Cập nhật lúc: <span id="time">--</span>
-        </p>
+        <p class="timestamp">Cập nhật lúc: <span id="time">--</span></p>
 
         <div class="grafana-section">
-            <h3><i class="fas fa-chart-line"></i> Biểu đồ lịch sử (Grafana)</h3>
+            <h3>Biểu đồ lịch sử (Grafana)</h3>
             <!-- Nhúng iframe từ Grafana (thay đổi URL sau khi cấu hình Grafana) -->
-            <div class="iframe-container">
-                <iframe src="http://192.168.183.130:3000/d-solo/adfjdsq/new-dashboard?orgId=1&from=1781218829580&to=1781240429580&timezone=browser&panelId=panel-1" width="100%" height="400" frameborder="0" title="Grafana Chart 1"></iframe>
-            </div>
-            <div class="iframe-container" style="margin-top: 20px;">
-                <iframe id="grafana-frame" src="" width="100%" height="450" frameborder="0" title="Grafana Dashboard"></iframe>
-            </div>
+            <iframe src="http://192.168.183.130:3000/d-solo/adch2pt/1?orgId=1&from=1781225551640&to=1781247151640&timezone=browser&panelId=panel-1" width="900" height="400" frameborder="0"></iframe>
+            <iframe id="grafana-frame" src="" width="100%" height="450" frameborder="0"></iframe>
         </div>
     </div>
     <script src="script.js"></script>
 </body>
 </html>
 ```
-<img width="1919" height="1027" alt="image" src="https://github.com/user-attachments/assets/a3dacff2-ba85-4200-b058-b9b6cdf5a259" />
+<img width="1919" height="1034" alt="image" src="https://github.com/user-attachments/assets/12d337ca-3513-4f4f-add5-d931561d1cd8" />
+
 
 > Viết file script.js
 ```
@@ -539,29 +575,22 @@ updateWeatherData();
 // Thiết lập tự động gọi API lấy dữ liệu mới sau mỗi 5 giây (5000ms) để đồng bộ với Node-RED
 setInterval(updateWeatherData, 5000);
 ```
-<img width="1919" height="1030" alt="image" src="https://github.com/user-attachments/assets/bfa65f6f-1e17-4651-8cd4-61ee82b9ebf6" />
+<img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/aafc3866-5c25-4a6a-ab88-b5cc08a3276f" />
 
 > Viết file style.css
 ```
-/* Reset & global styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #333;
     text-align: center;
     margin: 0;
-    padding: 40px 20px;
+    padding: 20px;
     min-height: 100vh;
     position: relative;
 }
 
-/* Hiệu ứng nền động nhẹ */
+/* Thêm hiệu ứng nền nhẹ */
 body::before {
     content: '';
     position: fixed;
@@ -569,153 +598,131 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.08)" fill-opacity="0.4" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x bottom;
-    background-size: cover;
-    opacity: 0.2;
+    background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
     pointer-events: none;
-    z-index: 0;
 }
 
-/* Wrapper chính */
 .wrapper {
-    max-width: 1100px;
+    max-width: 1000px;
     margin: 0 auto;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 35px 30px;
-    border-radius: 48px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    background: rgba(255, 255, 255, 0.96);
+    padding: 30px 25px;
+    border-radius: 32px;
+    box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0,0,0,0.05);
     position: relative;
-    z-index: 2;
-    transition: all 0.3s ease;
-    animation: fadeSlide 0.7s ease-out;
+    backdrop-filter: blur(2px);
+    transition: transform 0.2s ease;
 }
 
-@keyframes fadeSlide {
-    0% { opacity: 0; transform: translateY(15px);}
-    100% { opacity: 1; transform: translateY(0);}
-}
-
-/* Header đẹp mắt */
+/* Header đẹp hơn */
 h2 {
-    font-family: 'Segoe UI', 'Poppins', sans-serif;
-    font-size: 1.9rem;
+    font-size: 1.8rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #1e2b6e 0%, #2c3e8f 50%, #1a237e 100%);
-    -webkit-background-clip: text;
+    background: linear-gradient(120deg, #1e2b6e, #2c3e8f, #1a237e);
     background-clip: text;
+    -webkit-background-clip: text;
     color: transparent;
+    margin-bottom: 25px;
     letter-spacing: -0.3px;
-    margin-bottom: 15px;
-    display: inline-block;
-    padding: 0 20px 12px;
-    border-bottom: 4px solid;
-    border-image: linear-gradient(90deg, #f093fb, #f5576c, #4facfe) 1;
-    border-bottom-style: solid;
-    border-bottom-width: 4px;
     position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
 }
 
-h2::before {
-    content: '🌤️';
-    font-size: 2rem;
-    margin-right: 12px;
-    background: none;
-    color: #f5b042;
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    width: 60%;
+    height: 3px;
+    background: linear-gradient(90deg, #f093fb, #f5576c);
+    border-radius: 3px;
 }
 
-/* Grid các card */
 .monitor-grid {
     display: flex;
     justify-content: space-between;
     gap: 25px;
-    margin: 35px 0 25px;
+    margin: 30px 0 25px;
     flex-wrap: wrap;
 }
 
-/* Card styling hoa mĩ */
 .card {
     flex: 1;
-    min-width: 180px;
+    min-width: 170px;
     padding: 28px 18px;
-    border-radius: 32px;
+    border-radius: 28px;
     color: white;
+    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.25);
     position: relative;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    box-shadow: 0 15px 35px -12px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(2px);
     cursor: pointer;
 }
 
 .card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.45);
+    transform: translateY(-8px);
+    box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.4);
 }
 
-/* Icon trang trí cho từng card */
-.card::before {
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    position: absolute;
-    bottom: 12px;
-    right: 18px;
-    font-size: 4rem;
-    opacity: 0.2;
-    color: white;
-    transition: all 0.3s;
-}
-
-.card:hover::before {
-    opacity: 0.35;
-    transform: scale(1.05);
-}
-
-.temp-card::before {
-    content: "\f2c7";
-}
-.humidity-card::before {
-    content: "\f750";
-}
-.wind-card::before {
-    content: "\f72e";
-}
-
+/* Giữ nguyên màu nền card nhưng thêm gradient đẹp hơn */
 .temp-card {
     background: linear-gradient(145deg, #ff6b6b, #ee5a24);
     background: radial-gradient(circle at 20% 30%, #ff7e5e, #f14a2e);
 }
+
 .humidity-card {
     background: linear-gradient(145deg, #4facfe, #00f2fe);
     background: radial-gradient(circle at 70% 20%, #5dade2, #2c7ab1);
 }
+
 .wind-card {
     background: linear-gradient(145deg, #43e97b, #38f9a5);
     background: radial-gradient(circle at 30% 70%, #2ecc71, #239b56);
 }
 
+/* Thêm icon trang trí nhẹ cho từng card */
+.temp-card::after {
+    content: "🌡️";
+    position: absolute;
+    bottom: 12px;
+    right: 15px;
+    font-size: 3rem;
+    opacity: 0.2;
+}
+
+.humidity-card::after {
+    content: "💧";
+    position: absolute;
+    bottom: 12px;
+    right: 15px;
+    font-size: 3rem;
+    opacity: 0.2;
+}
+
+.wind-card::after {
+    content: "🍃";
+    position: absolute;
+    bottom: 12px;
+    right: 15px;
+    font-size: 3rem;
+    opacity: 0.2;
+}
+
 .card h3 {
     font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 20px;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.card h3 i {
-    font-size: 1.8rem;
-    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+    margin-bottom: 18px;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
 }
 
 .value {
     font-size: 3rem;
     font-weight: 800;
-    margin-top: 10px;
-    font-family: 'Segoe UI', monospace;
-    letter-spacing: 2px;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+    margin-top: 8px;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
     display: flex;
     align-items: baseline;
     justify-content: center;
@@ -727,109 +734,65 @@ h2::before {
     line-height: 1;
 }
 
-/* Timestamp cập nhật */
 .timestamp {
-    margin: 20px 0 25px;
-    font-size: 1rem;
-    font-weight: 500;
     color: #2c3e66;
-    background: rgba(100, 108, 255, 0.1);
+    font-style: normal;
+    font-weight: 500;
+    background: rgba(100, 108, 255, 0.12);
     display: inline-block;
-    padding: 10px 24px;
-    border-radius: 60px;
-    backdrop-filter: blur(4px);
-    font-family: monospace;
-    letter-spacing: 0.5px;
-}
-
-.timestamp i {
-    margin-right: 8px;
-    color: #5f6caf;
+    padding: 8px 24px;
+    border-radius: 50px;
+    margin: 15px 0 10px;
+    backdrop-filter: blur(2px);
+    font-size: 0.95rem;
 }
 
 .timestamp span {
     font-weight: 700;
     color: #1e2b6e;
-    background: rgba(255,255,240,0.8);
-    padding: 3px 12px;
+    background: rgba(255,248,225,0.9);
+    padding: 3px 10px;
     border-radius: 30px;
     margin-left: 6px;
 }
 
-/* Grafana Section */
 .grafana-section {
-    margin-top: 40px;
-    border-top: 2px dashed rgba(0, 0, 0, 0.1);
-    padding-top: 30px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(245,248,255,0.9));
-    border-radius: 36px;
-    padding: 20px 20px 25px;
+    margin-top: 35px;
+    border-top: 2px dashed rgba(0, 0, 0, 0.12);
+    padding-top: 25px;
+    border-radius: 0;
 }
 
 .grafana-section h3 {
-    font-size: 1.7rem;
-    font-weight: 700;
-    background: linear-gradient(120deg, #2b3b6e, #1f2b4e);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e2b6e;
     margin-bottom: 20px;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    background: rgba(30,43,110,0.05);
+    padding: 6px 20px;
+    border-radius: 40px;
 }
 
-.grafana-section h3 i {
-    font-size: 1.8rem;
-    color: #f39c12;
-    background: none;
-    -webkit-background-clip: unset;
-    background-clip: unset;
-    color: #e67e22;
-}
-
-/* Container cho iframe đẹp mắt */
-.iframe-container {
-    position: relative;
-    width: 100%;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-    background: #00000008;
-    transition: all 0.3s;
-    margin-top: 15px;
-}
-
-.iframe-container:hover {
-    transform: scale(0.99);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
+/* Làm đẹp iframe */
 iframe {
-    border: none;
-    width: 100%;
-    display: block;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
     background: #f8faff;
-    border-radius: 20px;
 }
 
-#grafana-frame {
-    width: 100%;
-    height: 450px;
-    border-radius: 20px;
+iframe:hover {
+    transform: scale(0.99);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.grafana-section iframe:first-of-type {
-    width: 100%;
-    height: 400px;
-    margin-bottom: 0;
-    border-radius: 20px;
-}
-
-/* Responsive trên mobile */
-@media (max-width: 780px) {
+/* Responsive mượt mà */
+@media (max-width: 750px) {
     body {
-        padding: 20px 12px;
+        padding: 15px;
     }
     .wrapper {
         padding: 20px 18px;
@@ -842,7 +805,10 @@ iframe {
     }
     .card {
         padding: 18px 12px;
-        min-width: 140px;
+        min-width: 130px;
+    }
+    .card h3 {
+        font-size: 1.2rem;
     }
     .value {
         font-size: 2.2rem;
@@ -850,24 +816,268 @@ iframe {
     .value span {
         font-size: 2.4rem;
     }
-    .card h3 {
+    .grafana-section h3 {
         font-size: 1.2rem;
     }
-    .grafana-section h3 {
-        font-size: 1.3rem;
-    }
-    #grafana-frame, .grafana-section iframe:first-of-type {
-        height: 280px;
+    iframe {
+        height: 300px;
     }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 550px) {
     .monitor-grid {
         flex-direction: column;
     }
     .card {
         width: 100%;
     }
+    iframe {
+        height: 250px;
+    }
 }
+
+/* Thêm hiệu ứng nhẹ khi load trang */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.wrapper {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.card {
+    animation: fadeInUp 0.4s ease-out backwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
 ```
-<img width="1919" height="1042" alt="image" src="https://github.com/user-attachments/assets/fc5333c6-94ba-44c2-8654-55fa6494a844" />
+<img width="1919" height="1026" alt="image" src="https://github.com/user-attachments/assets/cf6c544c-7efa-4ce4-a569-1c6520d9a2db" />
+
+### 2.5. Khởi động hệ thống
+Sau khi hoàn tất cấu hình, build và khởi động toàn bộ hệ thống:
+```
+docker compose up -d --build
+```
+<img width="1919" height="1030" alt="Screenshot 2026-06-12 113951" src="https://github.com/user-attachments/assets/3562f03b-8e93-4151-8f15-8d5bc40bb283" />
+
+```
+docker ps
+```
+<img width="1919" height="1033" alt="Screenshot 2026-06-12 114009" src="https://github.com/user-attachments/assets/450100bf-7a6a-412d-a363-2216ef4dca48" />
+
+Khởi tạo Table trên MariaDB:
+- Truy cập trực tiếp vào container MariaDB để tạo bảng weather_realtime
+```
+docker exec -it mariadb mariadb -uroot -p123456 -e "
+USE monitor_db;
+CREATE TABLE IF NOT EXISTS weather_realtime (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    temperature FLOAT,
+    humidity FLOAT,
+    windspeed FLOAT,
+    update_time DATETIME
+);
+"
+```
+Cấu hình InfluxDB Bucket và Token:
+- Truy cập bằng trình duyệt tại: http://192.168.183.130:8086.
+- Đăng ký nhanh tài khoản quản trị (VD: User admin, Pass admin123).
+- Đặt tên Organization là monitor_org và Bucket đầu tiên là weather_bucket.
+- Vào mục Load Data -> API Tokens -> Chọn Generate API Token (All Access) để lấy mã Token.
+<img width="1918" height="990" alt="Screenshot 2026-06-12 114216" src="https://github.com/user-attachments/assets/bb4a1890-083a-446e-87d2-73f436b11736" />
+
+<img width="1918" height="994" alt="Screenshot 2026-06-12 114305" src="https://github.com/user-attachments/assets/77b57201-08f1-4c93-b669-a278a0ecb238" />
+
+## 2.6. Cấu hình NODERED để tự động hóa luồng dữ liệu
+Trong giai đoạn này, Node-RED sẽ đóng vai trò đầu não thực hiện 4 nhiệm vụ liên tục:
+
+- Cào dữ liệu thời tiết thực tế từ API công khai.
+- Lưu trạng thái mới nhất vào MariaDB.
+- Lưu lịch sử vào InfluxDB (để Grafana vẽ biểu đồ).
+- Phân tích dị thường và kích hoạt Telegram Bot gửi tin nhắn cảnh báo vào Group.
+### Bước 1: Chuẩn bị thư viện (nodes) trong Node-RED
+Truy cập Node-RED qua địa chỉ http://<IP_máy_chủ_Ubuntu>:1880
+```
+http://192.168.183.130:1880
+```
+Click vào Menu (3 dấu gạch ngang góc trên bên phải) -> Chọn Manage palette.Chuyển sang thẻ Install, tìm kiếm và nhấn Install lần lượt 3 thư viện sau:
+```
+node-red-node-mysql (Kết nối MariaDB)
+
+node-red-contrib-mysql-config
+
+node-red-contrib-influxdb (Kết nối InfluxDB)
+```
+<img width="1918" height="990" alt="Screenshot 2026-06-12 114451" src="https://github.com/user-attachments/assets/45523e22-37ad-46b1-b0f6-cb4f29086a1e" />
+
+### Bước 2: Chuẩn bị thông tin Telegram Bot
+Trước khi viết Flow, cần chuẩn bị thông tin từ Telegram:
+
+Bot Token: Chat với @BotFather trên Telegram, gõ lệnh /newbot, đặt tên cho bot. Sau khi tạo xong, @BotFather sẽ cấp một chuỗi Token. Copy token này để bước sau dán vào Nodered.
+<img width="1440" height="941" alt="image" src="https://github.com/user-attachments/assets/de11b713-b269-434d-83e8-d28333f16b65" />
+
+Tạo nhóm chat có bot để cảnh báo:
+
+- Tạo một Group mới trên Telegram, thêm các thành viên vào (bao gồm cả tài khoản ID 1875746636 theo yêu cầu bài tập).
+- Thêm cả con Bot vừa tạo ở trên vào nhóm này với quyền Admin (để nó có quyền gửi tin nhắn).
+<img width="1917" height="946" alt="image" src="https://github.com/user-attachments/assets/28891cae-01d3-46fb-8424-05641dcac2b6" />
+
+### Bước 3: Thiết kế luồng dữ liệu
+kéo các node và điền các thông tin:
+
+> Node inject để thiết lập mỗi 5s lấy dữ liệu một lần
+<img width="1917" height="990" alt="Screenshot 2026-06-12 115252" src="https://github.com/user-attachments/assets/94445d62-7ab9-4437-9f76-8577bee2ba7f" />
+
+> Node http request để lấy dữ liệu thực
+<img width="1918" height="993" alt="Screenshot 2026-06-12 115300" src="https://github.com/user-attachments/assets/7c320886-24b1-4625-8973-77143fb7271f" />
+
+> chuyển dữ liệu JSON dạng chuỗi (string) thành Object JavaScript
+<img width="1917" height="991" alt="Screenshot 2026-06-12 115307" src="https://github.com/user-attachments/assets/7ce5a2ad-f8cc-42c4-957a-fd570caf265f" />
+
+> Lấy dữ liệu Open-Meteo
+<img width="1916" height="993" alt="Screenshot 2026-06-12 115314" src="https://github.com/user-attachments/assets/c0c46a61-5cbe-4378-87d8-e7c89f2c32db" />
+
+> SQL Query Builde
+<img width="1918" height="997" alt="Screenshot 2026-06-12 115323" src="https://github.com/user-attachments/assets/b729c795-9858-46a5-aca9-b83476208717" />
+
+> Query InfluxDB
+<img width="1917" height="995" alt="Screenshot 2026-06-12 115401" src="https://github.com/user-attachments/assets/5c4016e4-c059-40d9-af66-3980a40ca40e" />
+
+> Node switch kiểm tra ngưỡng và cảnh báo nhiệt độ
+<img width="1919" height="996" alt="Screenshot 2026-06-12 115233" src="https://github.com/user-attachments/assets/11b46fc4-4256-4fa1-b6b8-e29a0e15069a" />
+
+> Node SQL
+<img width="1915" height="998" alt="Screenshot 2026-06-12 115009" src="https://github.com/user-attachments/assets/5bfd87d4-18ff-41a2-b8a0-07e391d1eeaa" />
+
+> Lưu kết quả vào weather_bucket
+<img width="1918" height="996" alt="Screenshot 2026-06-12 115123" src="https://github.com/user-attachments/assets/83fc4ed3-a29d-42a1-84ab-93f969a7c3d9" />
+
+<img width="1919" height="998" alt="Screenshot 2026-06-12 115110" src="https://github.com/user-attachments/assets/ac3c56f0-a1bd-4909-b837-6f22602b6d5e" />
+
+> Node http request để bắn cảnh báo tới telegram
+<img width="1917" height="994" alt="Screenshot 2026-06-12 115207" src="https://github.com/user-attachments/assets/d69e2919-321c-4b79-a455-85a015f87064" />
+
+### Bước 4: Deploy và kiểm tra
+Bấm nút Deploy màu đỏ trên góc phải màn hình để lưu và chạy.
+<img width="1917" height="992" alt="Screenshot 2026-06-12 115434" src="https://github.com/user-attachments/assets/aea7a53a-2a42-4a5d-bbe5-bb329ce1eea7" />
+
+Truy cập vào giao diện web để xem kết quả http://192.168.183.130
+<img width="1895" height="987" alt="image" src="https://github.com/user-attachments/assets/c325f90c-667d-424d-9aeb-947c4067f69c" />
+
+> Chú ý: Vì nhiệt độ đang ở mức bình thường, nên để có cảnh báo đẩy về telegram, em sẽ sửa lại ngưỡng bất thường high từ 35 độ còn 20 độ.
+
+Kết quả cảnh báo khi nhiệt độ vượt ngưỡng 20 độ:
+<img width="1437" height="950" alt="Screenshot 2026-06-12 120752" src="https://github.com/user-attachments/assets/d6d5b256-59f8-42d9-b57f-5a0aae75f667" />
+
+### 2.7. Cấu hình Grafana kết nối InfluxDB
+### Bước 1: Đăng nhập grafana
+- Truy cập http://192.168.183.130:3000 để vào Grafana
+- Đăng nhập và đổi mật khẩu (nếu cần)
+<img width="1917" height="995" alt="Screenshot 2026-06-12 115526" src="https://github.com/user-attachments/assets/0887fa9b-160a-4c0b-b8b3-6bde67ceccdf" />
+
+### Bước 2: Thêm datasource
+- Tại thanh menu bên trái, chọn Connections -> Data sources -> Add data source.
+<img width="1913" height="989" alt="Screenshot 2026-06-12 115604" src="https://github.com/user-attachments/assets/b12cf01c-0bdd-4675-9e3f-4d2996a5e46e" />
+
+<img width="1916" height="989" alt="Screenshot 2026-06-12 115700" src="https://github.com/user-attachments/assets/3a2ca396-4538-4482-a91b-cb0f73ac73e6" />
+
+- Kéo xuống dưới cùng ấn Save & test. Nếu hiện thông báo màu xanh "Data source is working" là thành công!
+<img width="1916" height="984" alt="Screenshot 2026-06-12 115709" src="https://github.com/user-attachments/assets/b92dc61d-0afb-4f13-9d8e-167d64bd1f08" />
+### Bước 3: Lấy code tạo biểu đồ bên influxdb
+- Đăng nhập theo đường link: http://192.168.182.130:8086
+- Sau khi tao xong tài khoản thì ta chọn Dashboards -> Create dashboard -> New dashboard -> ALL CELL
+- Rồi tích các thông số đã được lưu
+<img width="1914" height="956" alt="image" src="https://github.com/user-attachments/assets/5f6d4861-fc84-4e94-81a3-960e6425e29c" />
+
+- Sau khi tích chọn xong ta ấn sang Script Editor rồi copy đoạn code đó
+<img width="1919" height="992" alt="image" src="https://github.com/user-attachments/assets/e489dae6-3412-4d12-a30e-b00d05b2819b" />
+
+### Bước 4: Tạo biểu đồ
+- Nhấn vào biểu tượng + ở phía trên bên phải, chọn New Dashboard -> add Panel -> Configure Visualization
+<img width="1919" height="987" alt="image" src="https://github.com/user-attachments/assets/eb3196a0-59a1-480a-8e87-589e0d00a415" />
+
+- Sau đó add code đã lấy được ở [hàn biểu đồ ở bước 3 vào
+<img width="1918" height="995" alt="Screenshot 2026-06-12 115941" src="https://github.com/user-attachments/assets/ae1de100-aa89-470e-870b-3b370cdf6fa0" />
+
+rồi chọn save -> apply -> hiển thị ra kết quả
+<img width="1612" height="897" alt="image" src="https://github.com/user-attachments/assets/e9bf2891-215c-4a57-a383-787c14e14c2f" />
+
+### Bước 5: Lấy link nhúng Iframe
+- Tại ô biểu đồ vừa vẽ, góc trên cùng bên phải của khung biểu đồ đó -> Xuất hiện dấu 3 chấm -> Chọn Share -> Chọn thẻ Embed.
+- Copy đoạn link trong thuộc tính src="..." (đổi localhost thành 192.168.164.129) rồi dán vào file index.html của Nginx.
+<img width="1913" height="987" alt="image" src="https://github.com/user-attachments/assets/f48493ef-b087-4e8c-a27c-c32f0f6a39cb" />
+
+<img width="1915" height="987" alt="image" src="https://github.com/user-attachments/assets/b021dfee-2faa-4443-a2e6-e4d62e7d92e3" />
+
+<img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/8a82f9c5-8802-48ab-b8cf-cd7db7608d98" />
+
+## 3. Kết quả
+<img width="1895" height="987" alt="Screenshot 2026-06-12 135435" src="https://github.com/user-attachments/assets/eaf63bf4-b61c-4def-98a6-a9dd32e5179f" />
+
+## 4. Đóng gói và khôi phục hệ thống
+### Bước 1: Xuất và đóng gói toàn bộ Container hiện tại thành file nén
+```
+# Trích xuất filesystem của từng container ra file tar độc lập
+docker export nodered > nodered.tar
+docker export mariadb > mariadb.tar
+docker export influxdb > influxdb.tar
+docker export grafana > grafana.tar
+docker export flask-api > flask-api.tar
+docker export nginx > nginx.tar
+
+# Gộp và nén lại thành một file duy nhất
+tar -czvf bt5_backup.tar.gz *.tar
+
+# Dọn dẹp các file tar lẻ sau khi nén xong
+rm *.tar
+```
+
+### Bước 2: Giả lập xóa sạch sẽ toàn bộ môi trường
+```
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+```
+<img width="1915" height="581" alt="Screenshot 2026-06-12 121833" src="https://github.com/user-attachments/assets/19a4ba75-74cc-4650-a1bd-a6d02fcece10" />
+
+> Lúc này vào trình duyệt sẽ sập hoàn toàn, chứng minh hệ thống đã được dọn dẹp sạch
+<img width="1914" height="986" alt="Screenshot 2026-06-12 121914" src="https://github.com/user-attachments/assets/6ee1966a-bd94-4883-9ae3-37bb1455085c" />
+
+### Bước 3: Quy trình giải nén và Khôi phục (Restore)
+```
+# Giải nén gói backup lớn thu được ban đầu
+tar -xzvf bt5_backup.tar.gz
+
+# Import ngược các file tar thành các Image sẵn sàng hoạt động
+docker import nodered.tar nodered_restore
+docker import mariadb.tar mariadb_restore
+docker import influxdb.tar influxdb_restore
+docker import grafana.tar grafana_restore
+docker import flask-api.tar flask_restore
+docker import nginx.tar nginx_restore
+```
+<img width="1913" height="174" alt="Screenshot 2026-06-12 122027" src="https://github.com/user-attachments/assets/a086438c-f419-43bc-b8ca-7f78e31fa7ad" />
+
+<img width="1916" height="264" alt="Screenshot 2026-06-12 123455" src="https://github.com/user-attachments/assets/0fadeaf5-9e8b-49f9-8239-94e00b5bcdfa" />
+
+Hệ thống sẽ tự động khôi phục lại trạng thái đỉnh cao ban đầu, giữ nguyên lịch sử dữ liệu cũ trong DB mà không cần cấu hình lại từ đầu!
+
+### Bước 4: Kết quả khôi phục
+<img width="1904" height="989" alt="image" src="https://github.com/user-attachments/assets/13464bb9-81e0-4df7-9f0c-a76e4093d370" />
+
+# Phần 3: Kết luận
+Hệ thống đã đạt được các kết quả cốt lõi sau:
+
+Kiến trúc container hóa tối ưu: Thao tác đóng gói toàn bộ các dịch vụ (Nginx, Flask API, MariaDB, InfluxDB, Node-RED, Grafana) bằng Docker Compose giúp hệ thống vận hành cô lập, ổn định, giải quyết triệt để bài toán xung đột tài nguyên cổng và dễ dàng di trú, khôi phục bằng các tệp nén sao lưu.
+
+Trực quan hóa và Tự động hóa luồng ETL: Luồng xử lý dữ liệu của Node-RED hoạt động mượt mà, tự động phân tách dữ liệu để phục vụ lưu trữ tức thời (MariaDB) lẫn phân tích xu hướng lịch sử (InfluxDB). Giao diện Web Dashboard được thiết kế hiện đại, đồng bộ hóa dữ liệu thời gian thực và tích hợp thành công biểu đồ động từ Grafana.
+
+Hệ thống cảnh báo thông minh: Tích hợp thành công cơ chế giám sát ngưỡng an toàn của các thông số thời tiết, tự động kích hoạt và gửi tin nhắn cảnh báo tức thời tới nhóm Telegram của các thành viên quản trị, đáp ứng trọn vẹn bài toán giám sát chủ động trong thực tế.
