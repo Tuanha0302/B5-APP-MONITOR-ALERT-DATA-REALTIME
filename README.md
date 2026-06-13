@@ -992,6 +992,7 @@ Kết quả cảnh báo khi nhiệt độ vượt ngưỡng 20 độ:
 
 - Kéo xuống dưới cùng ấn Save & test. Nếu hiện thông báo màu xanh "Data source is working" là thành công!
 <img width="1916" height="984" alt="Screenshot 2026-06-12 115709" src="https://github.com/user-attachments/assets/b92dc61d-0afb-4f13-9d8e-167d64bd1f08" />
+
 ### Bước 3: Lấy code tạo biểu đồ bên influxdb
 - Đăng nhập theo đường link: http://192.168.182.130:8086
 - Sau khi tao xong tài khoản thì ta chọn Dashboards -> Create dashboard -> New dashboard -> ALL CELL
