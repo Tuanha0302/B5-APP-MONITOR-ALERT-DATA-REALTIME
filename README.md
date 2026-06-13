@@ -1014,7 +1014,7 @@ rồi chọn save -> apply -> hiển thị ra kết quả
 
 ### Bước 5: Lấy link nhúng Iframe
 - Tại ô biểu đồ vừa vẽ, góc trên cùng bên phải của khung biểu đồ đó -> Xuất hiện dấu 3 chấm -> Chọn Share -> Chọn thẻ Embed.
-- Copy đoạn link trong thuộc tính src="..." (đổi localhost thành 192.168.164.129) rồi dán vào file index.html của Nginx.
+- Copy đoạn link trong thuộc tính src="..." (đổi localhost thành 192.168.183.130) rồi dán vào file index.html của Nginx.
 <img width="1913" height="987" alt="image" src="https://github.com/user-attachments/assets/f48493ef-b087-4e8c-a27c-c32f0f6a39cb" />
 
 <img width="1915" height="987" alt="image" src="https://github.com/user-attachments/assets/b021dfee-2faa-4443-a2e6-e4d62e7d92e3" />
