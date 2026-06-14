@@ -515,7 +515,6 @@ server {
         <div class="grafana-section">
             <h3>Biểu đồ lịch sử (Grafana)</h3>
             <!-- Nhúng iframe từ Grafana (thay đổi URL sau khi cấu hình Grafana) -->
-            <iframe src="http://192.168.183.130:3000/d-solo/adch2pt/1?orgId=1&from=1781225551640&to=1781247151640&timezone=browser&panelId=panel-1" width="900" height="400" frameborder="0"></iframe>
             <iframe id="grafana-frame" src="" width="100%" height="450" frameborder="0"></iframe>
         </div>
     </div>
@@ -895,7 +894,7 @@ Cấu hình InfluxDB Bucket và Token:
 - Vào mục Load Data -> API Tokens -> Chọn Generate API Token (All Access) để lấy mã Token.
 <img width="1918" height="990" alt="Screenshot 2026-06-12 114216" src="https://github.com/user-attachments/assets/bb4a1890-083a-446e-87d2-73f436b11736" />
 
-<img width="1918" height="994" alt="Screenshot 2026-06-12 114305" src="https://github.com/user-attachments/assets/77b57201-08f1-4c93-b669-a278a0ecb238" />
+<img width="1166" height="605" alt="Screenshot 2026-06-14 221337" src="https://github.com/user-attachments/assets/7773c195-f152-4371-a66d-f6743c2da5a9" />
 
 ## 2.6. Cấu hình NODERED để tự động hóa luồng dữ liệu
 Trong giai đoạn này, Node-RED sẽ đóng vai trò đầu não thực hiện 4 nhiệm vụ liên tục:
@@ -923,7 +922,7 @@ node-red-contrib-influxdb (Kết nối InfluxDB)
 Trước khi viết Flow, cần chuẩn bị thông tin từ Telegram:
 
 Bot Token: Chat với @BotFather trên Telegram, gõ lệnh /newbot, đặt tên cho bot. Sau khi tạo xong, @BotFather sẽ cấp một chuỗi Token. Copy token này để bước sau dán vào Nodered.
-<img width="1440" height="941" alt="image" src="https://github.com/user-attachments/assets/de11b713-b269-434d-83e8-d28333f16b65" />
+<img width="1164" height="724" alt="Screenshot 2026-06-14 220956" src="https://github.com/user-attachments/assets/80e87a9f-059d-412e-b60a-18f94d174a49" />
 
 Tạo nhóm chat có bot để cảnh báo:
 
@@ -1019,7 +1018,9 @@ rồi chọn save -> apply -> hiển thị ra kết quả
 
 <img width="1915" height="987" alt="image" src="https://github.com/user-attachments/assets/b021dfee-2faa-4443-a2e6-e4d62e7d92e3" />
 
-<img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/8a82f9c5-8802-48ab-b8cf-cd7db7608d98" />
+
+<img width="1171" height="628" alt="Screenshot 2026-06-14 221518" src="https://github.com/user-attachments/assets/fa7b652c-a4ca-453c-9dbf-baff70dc2c41" />
+
 
 ## 3. Kết quả
 <img width="1895" height="987" alt="Screenshot 2026-06-12 135435" src="https://github.com/user-attachments/assets/eaf63bf4-b61c-4def-98a6-a9dd32e5179f" />
